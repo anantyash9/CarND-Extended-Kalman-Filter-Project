@@ -67,7 +67,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   // to avoide devide by zero error
 
   float theta = atan2(py,px);
-  //theta = atan2(sin(theta),cos(theta));
+  theta = atan2(sin(theta),cos(theta));
   float rho_dot = (px*vx + py*vy)/rho;
   VectorXd h =  VectorXd(3);
   h << rho,theta,rho_dot;
