@@ -37,7 +37,9 @@ FusionEKF::FusionEKF() {
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
-  MatrixXd  P_ = MatrixXd(4,4);
+  MatrixXd P = MatrixXd(4,4);
+
+  //I will be using ground truth for initializing the state
   P_ << 1,0,0,0,
         0,1,0,0,
         0,0,1,0,
@@ -46,7 +48,6 @@ FusionEKF::FusionEKF() {
   H_laser_<< 1,0,0,0,
             0,1,0,0;
 
-  ekf_.P_ = P_;
 
 }
 
@@ -72,7 +73,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
+    // Initialized with ground truth values of the first measurements
     ekf_.x_ << 0.6, 0.6, 5.2, 0;
+    ekf_.P_ = P_;
+    ekf_.F_ = MatrixXd F(4, 4);
+    ekf_.F_ << 	1, 0, 0, 0,
+	 			0, 1, 0, 0,
+         		0, 0, 1, 0,
+         		0, 0, 0, 1;
+    previous_timestamp_ = measurement_pack.timestamp_;
     // done initializing, no need to predict or update
     is_initialized_ = true;
     return;
@@ -90,19 +99,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
 
-   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
-	 previous_timestamp_ = measurement_pack.timestamp_;
+  float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
+  previous_timestamp_ = measurement_pack.timestamp_;
   cout << "timestamp computed :" << dt <<endl;
-  ekf_.F_ = MatrixXd(4,4);
-  ekf_.F_<< 1, 0, dt, 0,
-			      0, 1, 0, dt,
-			      0, 0, 1, 0,
-			      0, 0, 0, 1;
+  ekf_.F_(0,2) = dt;
+  ekf_.F_(1,3) = dt
   cout << "F saved" << endl;
   float noise_ax = 9.0;
   float noise_ay = 9.0;
 
-    cout << "noise saved " << endl;
+  cout << "noise saved " << endl;
 
   float dt_2 = dt * dt;
 	float dt_3 = dt_2 * dt;
