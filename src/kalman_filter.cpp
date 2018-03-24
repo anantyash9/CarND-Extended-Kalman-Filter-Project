@@ -2,7 +2,7 @@
 #include<iostream>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-using namespace std;
+using namespace std; 
 // Please note that the Eigen library does not initialize
 // VectorXd or MatrixXd objects with zeros upon creation.
 
@@ -53,6 +53,7 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
+
   cout << "Update ekf called " << endl;
   /**
   TODO:
@@ -64,17 +65,23 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   float vy = x_[3];
 
   float rho = sqrt(px*px + py*py);
+//Avoiding devide by zero
   if (rho == 0)
   {return ;
   }
-  // to avoide devide by zero error
 
   float theta = atan2(py,px);
-  theta = atan2(sin(theta),cos(theta));
   float rho_dot = (px*vx + py*vy)/rho;
   VectorXd h =  VectorXd(3);
   h << rho,theta,rho_dot;
   VectorXd y = z - h;
+// normalizing the angle
+  double pi = atan(1)*4;
+  if( y[1] > pi )
+    y[1] -= 2.f*pi;
+  if( y[1] < -pi )
+    y[1] += 2.f*pi;
+
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
